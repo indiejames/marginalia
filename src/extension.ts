@@ -4,12 +4,14 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { workspace, WorkspaceEdit, Position, CommentRule } from 'vscode';
+import { workspace, window, WorkspaceEdit, Position, CommentRule } from 'vscode';
 const uuidv4 = require('uuid/v4');
 
 // The TextDocument where a note was created
 // TODO replace this with a map of uuids to TextDocuemnts
 let notatedTextDocument;
+
+let noteDirectory = '.marginalia';
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -42,12 +44,6 @@ export function activate(context: vscode.ExtensionContext) {
     // };
     
 
-    const decs: vscode.DecorationOptions[] = [];
-
-    // Use the console to output diagnostic information (console.log) and errors (console.error)
-    // This line of code will only be executed once when your extension is activated
-    console.log('Congratulations, your extension "marginalia" is now active!');
-
     // The command has been defined in the package.json file
     // Now provide the implementation of the command with  registerCommand
     // The commandId parameter must match the command field in package.json
@@ -56,7 +52,7 @@ export function activate(context: vscode.ExtensionContext) {
         if (workspace.workspaceFolders) {
             const folder = workspace.workspaceFolders[0];
             const rootPath = folder.uri.fsPath
-            const noteDir = path.join(rootPath, ".marginalia");
+            const noteDir = path.join(rootPath, noteDirectory);
             if (!fs.existsSync(noteDir)) {
                 fs.mkdirSync(noteDir);
             }
@@ -90,12 +86,51 @@ export function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(disposable);
 
+    workspace.onDidOpenTextDocument(document => {
+        if (workspace.workspaceFolders) {
+            const folder = workspace.workspaceFolders[0];
+            const rootPath = folder.uri.fsPath
+            const noteDir = path.join(rootPath, noteDirectory);
+            const activeEditor = vscode.window.activeTextEditor;
+            const decs: vscode.DecorationOptions[] = [];
+            if (fs.existsSync(noteDir)) {
+                // set all the decorations for all the notes
+                const uuidRegex = /(\d|[a-z]){8}-(\d|[a-z]){4}-(\d|[a-z]){4}-(\d|[a-z]){4}-(\d|[a-z]){12}/g;
+                const text = document.getText();
+                const matches = text.match(uuidRegex);
+                for (let uuid of matches) {
+                    // read the file for the uuid
+                    const filePath = path.join(noteDir, `${uuid}.md`);
+                    fs.readFile(filePath, (err, data) => {
+                        if (err) {
+                            window.showWarningMessage(err.message);
+                        } else {
+                            // set the decoration for the comment
+                            const offset = text.indexOf(uuid);
+                            if (offset != -1) {
+                                const pos = activeEditor.document.positionAt(offset);
+                                const range = new vscode.Range(pos, new Position(pos.line, 100) );
+                                // const position = new vscode.Range(anchor, active);
+                                // const decoration = { range: range, hoverMessage: "## TEST\nABC *123*\n```javascript\nvar x = 4;\n```\n![alt text](https://github.com/adam-p/markdown-here/raw/master/src/common/images/icon48.png \"Logo Title Text 1\")"};
+                                const decoration = { range: range, hoverMessage: data.toString() }
+                                decs.push(decoration);
+                                // TODO - is this a leak?
+                                activeEditor.setDecorations(smallNumberDecorationType, decs);
+                            }
+                        }
+                    });
+                }
+            }
+        }      
+    });
+
     // When a document is saved check to see if it a margin note
     workspace.onDidSaveTextDocument(async document => {
         const mdEditor = vscode.window.activeTextEditor;
         const fileName = document.uri.fsPath;
         const text = document.getText();
         const match = fileName.match(/.*\.marginalia.((\d|[a-z]){8}-(\d|[a-z]){4}-(\d|[a-z]){4}-(\d|[a-z]){4}-(\d|[a-z]){12})\.md/);
+        const decs: vscode.DecorationOptions[] = [];
         if (match) {
             // Get the text of the document and set it as the decoration for the note tag
             const uuid = match[1];
