@@ -4,12 +4,12 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { workspace, window, WorkspaceEdit, Position, CommentRule } from 'vscode';
+import { workspace, window, WorkspaceEdit, Position, CommentRule, TextEditor, Range } from 'vscode';
 const uuidv4 = require('uuid/v4');
 
 // The TextDocument where a note was created
 // TODO replace this with a map of uuids to TextDocuemnts
-let notatedTextDocument;
+let notatedEditor = {};
 
 let noteDirectory = '.marginalia';
 
@@ -33,7 +33,6 @@ const smallNumberDecorationType = vscode.window.createTextEditorDecorationType({
 export function activate(context: vscode.ExtensionContext) {
 
     let disposable = vscode.commands.registerCommand('extension.annotate', async () => {
-        // The code you place here will be executed every time your command is executed
         if (workspace.workspaceFolders) {
             const folder = workspace.workspaceFolders[0];
             const rootPath = folder.uri.fsPath
@@ -43,13 +42,16 @@ export function activate(context: vscode.ExtensionContext) {
             }
             
             activeEditor = vscode.window.activeTextEditor;
-            notatedTextDocument = activeEditor.document;
     
             const active = activeEditor.selection.active;
             const anchor = activeEditor.selection.anchor;
             const commentPos = new Position(anchor.line, 0);
 
             const uuid = uuidv4();
+            notatedEditor[uuid] = {
+                editor: activeEditor,
+                commentPos: commentPos
+            };
             // TODO - add code to get the proper comment string from prefs
             const comment = ";; MN:" + uuid + "\n";
 
@@ -74,13 +76,46 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.window.onDidChangeActiveTextEditor(editor => {
 		activeEditor = editor;
 		if (editor) {
-			triggerUpdateDecorations();
+			updateDecorations();
 		}
 	}, null, context.subscriptions);
 
     // workspace.onDidOpenTextDocument(document => {
           
     // });
+    
+
+    workspace.onDidCloseTextDocument(async document => {
+        const fileName = document.uri.fsPath;
+        const match = fileName.match(/.*\.marginalia.((\d|[a-z]){8}-(\d|[a-z]){4}-(\d|[a-z]){4}-(\d|[a-z]){4}-(\d|[a-z]){12})\.md/);
+
+        if (match) {
+            if (document.getText() === '') {
+                const editInfo = notatedEditor[match[1]];
+                if (editInfo) {
+                    notatedEditor[match[1]] = null;
+                    const editor: TextEditor = editInfo["editor"];
+                    const pos = editInfo["commentPos"];
+
+                    if (pos) {
+                        const start = new Position(pos.line, 0);
+                        const end = new Position(pos.line+1, 0);
+                        const range = new Range(start, end);
+                        const applied = await editor.edit(edit => {
+                            edit.delete(range);
+                        }, {
+                            undoStopAfter: false,
+                            undoStopBefore: false
+                        });
+
+                        console.log(`applied = ${applied}`);
+                        updateDecorations();
+
+                    }
+                }
+            }
+        }
+    });
 
     // When a document is saved check to see if it a margin note
     workspace.onDidSaveTextDocument(async document => {
@@ -90,10 +125,25 @@ export function activate(context: vscode.ExtensionContext) {
         const match = fileName.match(/.*\.marginalia.((\d|[a-z]){8}-(\d|[a-z]){4}-(\d|[a-z]){4}-(\d|[a-z]){4}-(\d|[a-z]){12})\.md/);
 
         if (match) {
-            if (document.lineCount == 0) {
-                // note is empty so remove notation from active document
+            // if (document.getText() === '') {
+            //     const editInfo = notatedEditor[match[1]];
+            //     if (editInfo) {
+            //         const editor: TextEditor = editInfo["editor"];
+            //         const pos = editInfo["commentPos"];
 
-            }
+            //         if (pos) {
+            //             const start = new Position(pos.line, 0);
+            //             const end = new Position(pos.line+1, 0);
+            //             const range = new Range(start, end);
+            //             editor.edit(edit => {
+            //                 edit.delete(range);
+            //             }, {
+            //                 undoStopAfter: false,
+            //                 undoStopBefore: false
+            //             });
+            //         }
+            //     }
+            // }
             vscode.commands.executeCommand('workbench.action.closeActiveEditor');
         }
     });
@@ -104,7 +154,7 @@ export function deactivate() {
     console.log("Deactivating marginalia")
 }
 
-export function triggerUpdateDecorations() {
+export function updateDecorations() {
     if (workspace.workspaceFolders) {
         const folder = workspace.workspaceFolders[0];
         const rootPath = folder.uri.fsPath
