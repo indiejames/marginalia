@@ -1,10 +1,8 @@
 'use strict';
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { workspace, window, WorkspaceEdit, Position, TextEditor, Range, commands } from 'vscode';
+import { workspace, window, WorkspaceEdit, Position, TextEditor, Range, commands, TextDocument } from 'vscode';
 import { disconnect } from 'cluster';
 const uuidv4 = require('uuid/v4');
 
@@ -29,18 +27,34 @@ const marginaliaDecorationType = vscode.window.createTextEditorDecorationType({
     }
 });
 
+const noteFolder = (document: TextDocument) => {
+    const folderSetting:string = vscode.workspace.getConfiguration('marginalia').get('noteFolder');
+    if (folderSetting.match(/\$\{workspaceTopLevelFolder\}/)) {
+        const documentPath = document.fileName;
+        for (let folder of workspace.workspaceFolders) {
+            const folderPath = folder.uri.fsPath
+            if (documentPath.indexOf(folderPath) != -1) {
+                return folderSetting.replace('${workspaceTopLevelFolder}',folderPath);
+            }
+        }
+    }
+
+    return folderSetting;
+}
+
 export function activate(context: vscode.ExtensionContext) {
 
     let disposable = vscode.commands.registerCommand('extension.annotate', async () => {
         if (workspace.workspaceFolders) {
-            const folder = workspace.workspaceFolders[0];
-            const rootPath = folder.uri.fsPath
-            const noteDir = path.join(rootPath, noteDirectory);
+            activeEditor = vscode.window.activeTextEditor;
+            // const folder = workspace.workspaceFolders[0];
+            // const rootPath = folder.uri.fsPath
+            // const noteDir = path.join(rootPath, noteDirectory);
+            const noteDir = noteFolder(activeEditor.document);
+
             if (!fs.existsSync(noteDir)) {
                 fs.mkdirSync(noteDir);
             }
-            
-            activeEditor = vscode.window.activeTextEditor;
     
             const active = activeEditor.selection.active;
             const anchor = activeEditor.selection.anchor;
@@ -51,8 +65,7 @@ export function activate(context: vscode.ExtensionContext) {
                 editor: activeEditor,
                 commentPos: commentPos
             };
-            // TODO - add code to get the proper comment string from prefs
-            // const comment = ";; MN:" + uuid + "\n";
+
             const prefix = vscode.workspace.getConfiguration('marginalia').get('markerPrefix');
             const marker = `${prefix}${uuid}\n`;
 
@@ -67,7 +80,7 @@ export function activate(context: vscode.ExtensionContext) {
             if (editWorked) {
                 await commands.executeCommand('cursorMove', {to: 'up'})
                 // TODO add a check here to make sure this works - otherwise I should remove the
-                // marker
+                // marker.
                 vscode.commands.executeCommand('editor.action.commentLine');
             }
 
@@ -83,7 +96,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(disposable);
 
-    disposable = vscode.commands.registerCommand('extension.enableMarginNotes', () => {
+    disposable = vscode.commands.registerCommand('extension.displayMarginNotes', () => {
         // Update the active editor
         updateDecorations();
     });
@@ -173,8 +186,9 @@ export function updateDecorations() {
     if (workspace.workspaceFolders) {
         const folder = workspace.workspaceFolders[0];
         const rootPath = folder.uri.fsPath
-        const noteDir = path.join(rootPath, noteDirectory);
+        // const noteDir = path.join(rootPath, noteDirectory);
         activeEditor = vscode.window.activeTextEditor;
+        const noteDir = noteFolder(activeEditor.document);
 
         const decs: vscode.DecorationOptions[] = [];
         if (fs.existsSync(noteDir)) {
