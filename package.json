@@ -1,9 +1,20 @@
 {
     "name": "marginalia",
-    "displayName": "marginalia",
-    "description": "Add margin notest fo your code.",
-    "version": "0.0.1",
+    "displayName": "Marginalia",
+    "description": "Add margin notes for your code using markdown.",
+    "version": "1.0.0",
+    "license": "MIT",
+    "icon": "images/icon.png",
+    "galleryBanner": {
+        "color": "#63B131",
+        "theme": "dark"
+    },
     "publisher": "jamesnorton",
+    "keywords": [
+        "note",
+        "comment",
+        "markdown"
+    ],
     "engines": {
         "vscode": "^1.18.0"
     },
@@ -11,14 +22,46 @@
         "Other"
     ],
     "activationEvents": [
-        "*"
+        "onCommand:extension.displayMarginNotes",
+        "onCommand:extension.annotate"
     ],
     "main": "./out/extension",
     "contributes": {
+        "configuration":[
+            {
+                "title": "Marginalia configuration",
+                "properties": {
+                    "marginalia.noteFolder": {
+                        "type": "string",
+                        "default": "${workspaceTopLevelFolder}/.marginalia",
+                        "description": "Specifies the folder to use for storing notes. By default the notes are stored in the top level folders of the workspace."
+                    },
+                    "marginalia.markerPrefix": {
+                        "type": "string",
+                        "default": "\u261E ",
+                        "description": "Specifies the string to use as a prefix for margin note comment markers."
+                    }
+                }
+            }
+        ],
         "commands": [{
+            "command": "extension.displayMarginNotes",
+            "title": "Display Margin Notes",
+            "category": "Marginalia"
+        },
+        {
             "command": "extension.annotate",
-            "title": "Add Note"
-        }]
+            "title": "Add Margin Note",
+            "category": "Marginalia",
+            "icon": "images/icon.png"
+        }],
+        "menus": {
+            "editor/context": [
+                {
+                    "command": "extension.annotate"
+                }
+            ]
+        }
     },
     "scripts": {
         "vscode:prepublish": "npm run compile",

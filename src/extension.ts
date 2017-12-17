@@ -4,18 +4,17 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { workspace, window, WorkspaceEdit, Position, CommentRule, TextEditor, Range } from 'vscode';
+import { workspace, window, WorkspaceEdit, Position, TextEditor, Range, commands } from 'vscode';
+import { disconnect } from 'cluster';
 const uuidv4 = require('uuid/v4');
 
-// The TextDocument where a note was created
-// TODO replace this with a map of uuids to TextDocuemnts
 let notatedEditor = {};
 
 let noteDirectory = '.marginalia';
 
 let activeEditor;
 
-const smallNumberDecorationType = vscode.window.createTextEditorDecorationType({
+const marginaliaDecorationType = vscode.window.createTextEditorDecorationType({
     borderWidth: '1px',
     borderStyle: 'solid',
     overviewRulerColor: 'blue',
@@ -53,22 +52,40 @@ export function activate(context: vscode.ExtensionContext) {
                 commentPos: commentPos
             };
             // TODO - add code to get the proper comment string from prefs
-            const comment = ";; MN:" + uuid + "\n";
+            // const comment = ";; MN:" + uuid + "\n";
+            const prefix = vscode.workspace.getConfiguration('marginalia').get('markerPrefix');
+            const marker = `${prefix}${uuid}\n`;
 
-            activeEditor.edit(edit => {
-                edit.insert(commentPos, comment);
+            const editWorked = await activeEditor.edit(edit => {
+                edit.insert(commentPos, marker);
             }, {
                 undoStopAfter: false,
                 undoStopBefore: false
             });
 
+            // Use editor actions to comment the marker - this lets us work with any language
+            if (editWorked) {
+                await commands.executeCommand('cursorMove', {to: 'up'})
+                // TODO add a check here to make sure this works - otherwise I should remove the
+                // marker
+                vscode.commands.executeCommand('editor.action.commentLine');
+            }
+
             const noteFilePath = path.join(noteDir, uuid + ".md");
             const uri = vscode.Uri.parse("untitled:" + noteFilePath);
             const doc = await vscode.workspace.openTextDocument(uri);
             vscode.window.showTextDocument(doc, vscode.ViewColumn.Three);
+
         } else {
             vscode.window.showErrorMessage("Adding notes requires an open folder.")
         }
+    });
+
+    context.subscriptions.push(disposable);
+
+    disposable = vscode.commands.registerCommand('extension.enableMarginNotes', () => {
+        // Update the active editor
+        updateDecorations();
     });
 
     context.subscriptions.push(disposable);
@@ -78,10 +95,9 @@ export function activate(context: vscode.ExtensionContext) {
 		if (editor) {
 			updateDecorations();
 		}
-	}, null, context.subscriptions);
-
+    }, null, context.subscriptions);
+    
     // workspace.onDidOpenTextDocument(document => {
-          
     // });
     
 
@@ -108,7 +124,6 @@ export function activate(context: vscode.ExtensionContext) {
                             undoStopBefore: false
                         });
 
-                        console.log(`applied = ${applied}`);
                         updateDecorations();
 
                     }
@@ -164,6 +179,8 @@ export function updateDecorations() {
         const decs: vscode.DecorationOptions[] = [];
         if (fs.existsSync(noteDir)) {
             // set all the decorations for all the notes
+            // TODO - update this to include the prefix to prevent finding text that just happens
+            // to match this regex
             const uuidRegex = /(\d|[a-z]){8}-(\d|[a-z]){4}-(\d|[a-z]){4}-(\d|[a-z]){4}-(\d|[a-z]){12}/g;
             const text = activeEditor.document.getText();
             const matches = text.match(uuidRegex);
@@ -173,9 +190,8 @@ export function updateDecorations() {
                 fs.readFile(filePath, (err, data) => {
                     let noteText;
                     if (err) {
-                        // window.showWarningMessage(`Could not find margin note for id [${uuid}]`);
                         // ignore errors for now and add a warning message
-                        noteText = `WARNING: MISSING NOTE FILE\nNote file ${filePath} does not exist or could not be read. To stop seeing this warning message create that file and add markdown content to it.`
+                        noteText = `WARNING: MISSING NOTE FILE\nNote file ${filePath} does not exist or could not be read. To stop seeing this warning message create that file and add markdown content to it or remove this comment.`
                     } else {
                         noteText = data.toString();
                     }
@@ -189,7 +205,7 @@ export function updateDecorations() {
                         const range = new vscode.Range(pos, new Position(pos.line, 100) );
                         const decoration = { range: range, hoverMessage: noteText }
                         decs.push(decoration);
-                        activeEditor.setDecorations(smallNumberDecorationType, decs);
+                        activeEditor.setDecorations(marginaliaDecorationType, decs);
                     }
                 });
             }
