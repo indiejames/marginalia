@@ -11,9 +11,7 @@ commit these to your source control or not as you see fit.
 
 For example if there is an image subfolder under your extension project workspace:
 
-\!\[Adding a note\]\(images/add-note.png\)
-
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+![Adding a note](images/add_note.png)
 
 ## Usage
 
@@ -42,5 +40,3 @@ This extension contributes the following settings:
 * An normal editor pane is used to enter the markdown for a note - editor panes are not modal, so 
 don't change focus to another editor pane when entering text or things may not work correctly.
 * Adding notes is only supported for documents that support comments, i.e., program code.
-
-none
