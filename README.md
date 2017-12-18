@@ -11,7 +11,7 @@ commit these to your source control or not as you see fit.
 
 For example if there is an image subfolder under your extension project workspace:
 
-![Adding a note](images/add_note.png)
+![Adding a note](https://i.imgur.com/bLHVZAR.gifv)
 
 ## Usage
 
