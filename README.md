@@ -9,13 +9,12 @@ Add markdown notes to your code using unobtrusive annotated comments. You can us
 Comments are stored as markdown files in a directory or directories of your choice. You can
 commit these to your source control or not as you see fit.
 
-For example if there is an image subfolder under your extension project workspace:
-
 ![Adding a note](https://i.imgur.com/5KGWEIs.gif)
 
 ## Usage
 
 ### Adding Notes
+
 Move the cursor to some point in a file where you wish to add a notation line. Select 
 'Add Margin Note' from the command palette or from the context menu. This will add a commented 
 line that contains a notation reference and then open an editor
@@ -24,6 +23,7 @@ editor will close automatically. Hover over the decorated note comment to see th
 markdown in a hover pane.
 
 ## Deleting Notes
+
 Currently this is a manual process. To remove the notation from a file just delete the comment
 line containing the notation reference. Then remove the corresponding file (the one with
 the file name the same as the id in the notation comment) from the notes directory.
@@ -34,6 +34,12 @@ This extension contributes the following settings:
 
 * `marginalia.noteFolder`: Specifies the folder to use for storing notes.
 * `marginalia.markerPrefix`: Specifies the string to use as a prefix for margin note comment markers.
+
+## Motivation
+
+When performing archeology on a codebase I often come across sections of code that need clarification. I used to jot down notes in a notebook or text file when I came to a section of code that I didn't quite understand, but this meant my notes were separated from the code. Sure I can add clarifying comments to the code, but sometimes I don't want to clutter things up with long comments that might not be needed for everyone.
+
+This extension provides the best of both worlds - notes are embedded in the code the way comments are, but with minimal impact. And you can utitlize all the power of markdown to add formatting, links, and charts to your notes.  
 
 ## Known Issues
 

@@ -9,7 +9,17 @@
         "color": "#63B131",
         "theme": "dark"
     },
+    "author": {
+        "name": "James Norton"
+    },
     "publisher": "jamesnorton",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/indiejames/marginalia"
+    },
+    "bugs": {
+        "url": "https://github.com/indiejames/marginalia/issues"
+    },
     "keywords": [
         "note",
         "comment",
