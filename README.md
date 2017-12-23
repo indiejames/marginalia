@@ -1,5 +1,7 @@
 # Marginalia
 
+[![Join the chat at https://gitter.im/vscode-marginalia/Lobby](https://badges.gitter.im/vscode-marginalia/Lobby.svg)](https://gitter.im/vscode-marginalia/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 A Visual Studio Code extension for adding embedded markdown notes to code files.
 
 ## Features
