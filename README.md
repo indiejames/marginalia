@@ -1,6 +1,6 @@
 # Marginalia
 
-A Visual Studio Code extension for adding embedded markdown notes to files.
+A Visual Studio Code extension for adding embedded markdown notes to code files.
 
 ## Features
 
@@ -11,12 +11,12 @@ commit these to your source control or not as you see fit.
 
 For example if there is an image subfolder under your extension project workspace:
 
-![Adding a note](https://i.imgur.com/bLHVZAR.gifv)
+![Adding a note](https://i.imgur.com/5KGWEIs.gif)
 
 ## Usage
 
 ### Adding Notes
-Move the cursor to some point in a document where you wish to add a notation line. Select 
+Move the cursor to some point in a file where you wish to add a notation line. Select 
 'Add Margin Note' from the command palette or from the context menu. This will add a commented 
 line that contains a notation reference and then open an editor
 pane in which you can enter markdown for the note. When you are done save the document and the
