@@ -31,12 +31,16 @@ const noteFolder = (document: TextDocument) => {
     const folderSetting:string = vscode.workspace.getConfiguration('marginalia').get('noteFolder');
     if (folderSetting.match(/\$\{workspaceTopLevelFolder\}/)) {
         const documentPath = document.fileName;
+        let rval = null;
         for (let folder of workspace.workspaceFolders) {
             const folderPath = folder.uri.fsPath
             if (documentPath.indexOf(folderPath) != -1) {
-                return folderSetting.replace('${workspaceTopLevelFolder}',folderPath);
+                rval = folderSetting.replace('${workspaceTopLevelFolder}',folderPath);
+                break;
             }
         }
+
+        return rval;
     }
 
     return folderSetting;
@@ -51,6 +55,11 @@ export function activate(context: vscode.ExtensionContext) {
             // const rootPath = folder.uri.fsPath
             // const noteDir = path.join(rootPath, noteDirectory);
             const noteDir = noteFolder(activeEditor.document);
+
+            if (!noteDir) {
+                vscode.window.showErrorMessage(`Files outside of a workspace cannot be annotated.`);
+                return;
+            }
 
             if (!fs.existsSync(noteDir)) {
                 fs.mkdirSync(noteDir);
@@ -153,25 +162,6 @@ export function activate(context: vscode.ExtensionContext) {
         const match = fileName.match(/.*\.marginalia.((\d|[a-z]){8}-(\d|[a-z]){4}-(\d|[a-z]){4}-(\d|[a-z]){4}-(\d|[a-z]){12})\.md/);
 
         if (match) {
-            // if (document.getText() === '') {
-            //     const editInfo = notatedEditor[match[1]];
-            //     if (editInfo) {
-            //         const editor: TextEditor = editInfo["editor"];
-            //         const pos = editInfo["commentPos"];
-
-            //         if (pos) {
-            //             const start = new Position(pos.line, 0);
-            //             const end = new Position(pos.line+1, 0);
-            //             const range = new Range(start, end);
-            //             editor.edit(edit => {
-            //                 edit.delete(range);
-            //             }, {
-            //                 undoStopAfter: false,
-            //                 undoStopBefore: false
-            //             });
-            //         }
-            //     }
-            // }
             vscode.commands.executeCommand('workbench.action.closeActiveEditor');
         }
     });

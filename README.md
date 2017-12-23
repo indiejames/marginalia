@@ -37,6 +37,6 @@ This extension contributes the following settings:
 
 ## Known Issues
 
-* An normal editor pane is used to enter the markdown for a note - editor panes are not modal, so 
+* A normal editor pane is used to enter the markdown for a note - editor panes are not modal, so 
 don't change focus to another editor pane when entering text or things may not work correctly.
 * Adding notes is only supported for documents that support comments, i.e., program code.
