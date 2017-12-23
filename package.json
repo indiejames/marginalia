@@ -2,7 +2,7 @@
     "name": "marginalia",
     "displayName": "Marginalia",
     "description": "Add margin notes for your code using markdown.",
-    "version": "1.0.0",
+    "version": "1.0.2",
     "license": "MIT",
     "icon": "images/icon.png",
     "galleryBanner": {
@@ -37,7 +37,7 @@
     ],
     "main": "./out/extension",
     "contributes": {
-        "configuration":[
+        "configuration": [
             {
                 "title": "Marginalia configuration",
                 "properties": {
@@ -48,23 +48,25 @@
                     },
                     "marginalia.markerPrefix": {
                         "type": "string",
-                        "default": "\u261E ",
+                        "default": "☞ ",
                         "description": "Specifies the string to use as a prefix for margin note comment markers."
                     }
                 }
             }
         ],
-        "commands": [{
-            "command": "extension.displayMarginNotes",
-            "title": "Display Margin Notes",
-            "category": "Marginalia"
-        },
-        {
-            "command": "extension.annotate",
-            "title": "Add Margin Note",
-            "category": "Marginalia",
-            "icon": "images/icon.png"
-        }],
+        "commands": [
+            {
+                "command": "extension.displayMarginNotes",
+                "title": "Display Margin Notes",
+                "category": "Marginalia"
+            },
+            {
+                "command": "extension.annotate",
+                "title": "Add Margin Note",
+                "category": "Marginalia",
+                "icon": "images/icon.png"
+            }
+        ],
         "menus": {
             "editor/context": [
                 {

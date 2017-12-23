@@ -3,6 +3,14 @@ All notable changes to the "marginalia" extension will be documented in this fil
 
 ## Release Notes
 
+### 1.0.2
+
+Updated CHANGELOG
+
+### 1.0.1
+
+Updated icon
+
 ### 1.0.0
 
 Initial release of Marginalia
