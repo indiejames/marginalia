@@ -2,12 +2,12 @@
     "name": "marginalia",
     "displayName": "Marginalia",
     "description": "Add margin notes for your code using markdown.",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "license": "MIT",
     "icon": "images/icon.png",
     "galleryBanner": {
-        "color": "#63B131",
-        "theme": "dark"
+        "color": "#D1D1D1",
+        "theme": "light"
     },
     "author": {
         "name": "James Norton"

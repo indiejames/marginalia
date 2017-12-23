@@ -3,6 +3,10 @@ All notable changes to the "marginalia" extension will be documented in this fil
 
 ## Release Notes
 
+### 1.0.3
+
+Updated marketplace banner color
+
 ### 1.0.2
 
 Updated CHANGELOG
