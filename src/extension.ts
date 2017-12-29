@@ -12,6 +12,8 @@ let noteDirectory = '.marginalia';
 
 let activeEditor;
 
+// This is a test comment
+
 const marginaliaDecorationType = vscode.window.createTextEditorDecorationType({
     borderWidth: '1px',
     borderStyle: 'solid',
