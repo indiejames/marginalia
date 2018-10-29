@@ -103,6 +103,44 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
+    disposable = vscode.commands.registerCommand('extension.edit', async () => {
+        if (workspace.workspaceFolders) {
+            activeEditor = vscode.window.activeTextEditor;
+           
+            const noteDir = noteFolder(activeEditor.document);
+
+            if (!noteDir) {
+                vscode.window.showErrorMessage(`Files outside of a workspace cannot be annotated.`);
+                return;
+            }
+
+            if (!fs.existsSync(noteDir)) {
+                fs.mkdirSync(noteDir);
+            }
+    
+            const active = activeEditor.selection.active;
+            const anchor = activeEditor.selection.anchor;
+            const line = activeEditor.document.lineAt(anchor);
+            const lineText = line.text;
+            const uuidRegex = /(\d|[a-z]){8}-(\d|[a-z]){4}-(\d|[a-z]){4}-(\d|[a-z]){4}-(\d|[a-z]){12}/g;
+            const uuid = lineText.match(uuidRegex)[0];
+            const commentPos = new Position(anchor.line, 0);
+            
+            notatedEditor[uuid] = {
+                editor: activeEditor,
+                commentPos: commentPos
+            };
+
+            const noteFilePath = path.join(noteDir, uuid + ".md");
+            const uri = vscode.Uri.file(noteFilePath);
+            const doc = await vscode.workspace.openTextDocument(uri);
+            vscode.window.showTextDocument(doc, vscode.ViewColumn.Three);
+
+        } else {
+            vscode.window.showErrorMessage("Adding notes requires an open folder.")
+        }
+    });
+
     context.subscriptions.push(disposable);
 
     disposable = vscode.commands.registerCommand('extension.displayMarginNotes', () => {

@@ -65,12 +65,21 @@
                 "title": "Add Margin Note",
                 "category": "Marginalia",
                 "icon": "images/icon.png"
+            },
+            {
+                "command": "extension.edit",
+                "title": "Edit Margin Note",
+                "category": "Marginalia",
+                "icon": "images/icon.png"
             }
         ],
         "menus": {
             "editor/context": [
                 {
                     "command": "extension.annotate"
+                },
+                {
+                    "command": "extension.edit"
                 }
             ]
         }
