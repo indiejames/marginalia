@@ -12,6 +12,8 @@ let noteDirectory = '.marginalia';
 
 let activeEditor;
 
+let ignoreEmptyFile = false;
+
 const marginaliaDecorationType = vscode.window.createTextEditorDecorationType({
     borderWidth: '1px',
     borderStyle: 'solid',
@@ -64,7 +66,7 @@ export function activate(context: vscode.ExtensionContext) {
             if (!fs.existsSync(noteDir)) {
                 fs.mkdirSync(noteDir);
             }
-    
+
             const active = activeEditor.selection.active;
             const anchor = activeEditor.selection.anchor;
             const commentPos = new Position(anchor.line, 0);
@@ -106,7 +108,7 @@ export function activate(context: vscode.ExtensionContext) {
     disposable = vscode.commands.registerCommand('extension.edit', async () => {
         if (workspace.workspaceFolders) {
             activeEditor = vscode.window.activeTextEditor;
-           
+
             const noteDir = noteFolder(activeEditor.document);
 
             if (!noteDir) {
@@ -115,29 +117,29 @@ export function activate(context: vscode.ExtensionContext) {
             }
 
             if (!fs.existsSync(noteDir)) {
-                fs.mkdirSync(noteDir);
+                vscode.window.showErrorMessage(`Can only edit existing notes.`);
+                return;
             }
-    
+
             const active = activeEditor.selection.active;
             const anchor = activeEditor.selection.anchor;
             const line = activeEditor.document.lineAt(anchor);
-            const lineText = line.text;
+            const lineText: String = line.text;
             const uuidRegex = /(\d|[a-z]){8}-(\d|[a-z]){4}-(\d|[a-z]){4}-(\d|[a-z]){4}-(\d|[a-z]){12}/g;
-            const uuid = lineText.match(uuidRegex)[0];
-            const commentPos = new Position(anchor.line, 0);
-            
-            notatedEditor[uuid] = {
-                editor: activeEditor,
-                commentPos: commentPos
-            };
+            const match = lineText.match(uuidRegex);
 
-            const noteFilePath = path.join(noteDir, uuid + ".md");
-            const uri = vscode.Uri.file(noteFilePath);
-            const doc = await vscode.workspace.openTextDocument(uri);
-            vscode.window.showTextDocument(doc, vscode.ViewColumn.Three);
+            if (match) {
+                const uuid = match[0];
+                const noteFilePath = path.join(noteDir, uuid + ".md");
+                const uri = vscode.Uri.file(noteFilePath);
+                const doc = await vscode.workspace.openTextDocument(uri);
+                vscode.window.showTextDocument(doc, vscode.ViewColumn.Three);
+            } else {
+                vscode.window.showErrorMessage("Select a note marker to edit a note.");
+            }
 
         } else {
-            vscode.window.showErrorMessage("Adding notes requires an open folder.")
+            vscode.window.showErrorMessage("Editing notes requires an open folder.");
         }
     });
 
@@ -156,17 +158,18 @@ export function activate(context: vscode.ExtensionContext) {
 			updateDecorations();
 		}
     }, null, context.subscriptions);
-    
+
     // workspace.onDidOpenTextDocument(document => {
     // });
-    
+
 
     workspace.onDidCloseTextDocument(async document => {
         const fileName = document.uri.fsPath;
+        // TODO change this to use the configuration for the margin note directory
         const match = fileName.match(/.*\.marginalia.((\d|[a-z]){8}-(\d|[a-z]){4}-(\d|[a-z]){4}-(\d|[a-z]){4}-(\d|[a-z]){12})\.md/);
 
         if (match) {
-            if (document.getText() === '') {
+            if (document.getText() === '' && !ignoreEmptyFile) {
                 const editInfo = notatedEditor[match[1]];
                 if (editInfo) {
                     notatedEditor[match[1]] = null;
@@ -189,12 +192,18 @@ export function activate(context: vscode.ExtensionContext) {
                     }
                 }
             }
+
+            ignoreEmptyFile = false;
         }
     });
 
     // When a document is saved check to see if it a margin note
     workspace.onDidSaveTextDocument(async document => {
-        
+        if (document.getText() === '') {
+            ignoreEmptyFile = false;
+        } else {
+            ignoreEmptyFile = true;
+        }
         const fileName = document.uri.fsPath;
         const text = document.getText();
         const match = fileName.match(/.*\.marginalia.((\d|[a-z]){8}-(\d|[a-z]){4}-(\d|[a-z]){4}-(\d|[a-z]){4}-(\d|[a-z]){12})\.md/);
@@ -252,5 +261,5 @@ export function updateDecorations() {
                 });
             }
         }
-    }    
+    }
 }
